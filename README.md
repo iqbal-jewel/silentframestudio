@@ -1,14 +1,38 @@
-# SilentFrameStudio Facebook automation
+# The Nightlight Express -- cozy Reels automation
 
-Posts 3x/day to the [Silent Frames Studio](https://facebook.com/1016600324866519)
-Facebook Page for 6 months: animation trivia, "did you know" facts, and an
-"on this day in animation" post with a rendered image (colourful Pexels
-photo background + headline, falls back to a gradient if Pexels is
-unavailable).
+This repo (originally SilentFrameStudio, same Page ID, now repurposed and
+renamed "The Nightlight Express") posts one cozy Ghibli-style ambient Reel
+per day to the Page's Facebook Reels, driven by a 90-video content plan.
 
-Everything ships through Facebook's native scheduler (`scheduled_publish_time`),
-so a missed GitHub Actions run never drops a post -- it's just picked up and
-scheduled on the next hourly run, up to 7 days ahead.
+The old trivia/fact/on-this-day GitHub Actions pipeline (`src/publish.py`,
+`src/meta.py`, `src/render.py`) is retired -- those old posts were purged
+from the Page and `PUBLISH_ENABLED` is off. `src/publish_reels.py` is the
+active pipeline now; see below.
+
+## Cozy Reels pipeline
+
+- `plan/reels_plan.json` -- 90 rows (id, location, variant, caption+hashtags)
+  extracted from the source content plan spreadsheet.
+- `videos/` (gitignored, local only) -- drop finished videos here as you
+  make them. Videos are matched to plan rows purely by **order**: the Nth
+  video that shows up (natural sort) gets plan row N's caption, regardless
+  of filename.
+- `state/reels_state.json` -- tracks which videos have been consumed and
+  which plan row/date they were scheduled against, so re-running is safe.
+
+Runs **locally** (not GitHub Actions) since videos are large local files:
+
+```
+python -m src.publish_reels status
+python -m src.publish_reels run            # dry run
+python -m src.publish_reels run --live
+```
+
+One video is scheduled per day at 6pm ET via Facebook's native Reels
+scheduler (`video_reels` resumable upload + `scheduled_publish_time`), so
+re-run this anytime you add a new video -- it only acts on videos it
+hasn't seen before, and only schedules as many days ahead as you have
+videos ready.
 
 ## Setup
 
